@@ -7,24 +7,25 @@ import urllib.request
 import certifi
 import time
 import statistics
+import os
 from collections import deque
 
-# --- CYBER-MINIMALIST THEME (Aanetra/HF Style) ---
+# --- NEON CYAN THEME (Screenshot Aesthetic) ---
 COLORS = {
-    "bg": "#09090B",           # Deep Onyx
-    "sidebar": "#111113",      # Slightly lighter sidebar
-    "card": "#18181B",         # Card background
-    "border": "#27272A",       # Subtle zinc border
-    "text_main": "#FAFAFA",    # Bright white
-    "text_dim": "#A1A1AA",     # Muted gray
-    "accent": "#6366F1",       # Indigo neon
-    "success": "#10B981",      # Emerald Green
-    "danger": "#EF4444",       # Rose Red
+    "bg": "#050505",           # Near-black background
+    "sidebar": "#0A0A0A",      # Very dark gray sidebar
+    "card": "#0F0F0F",         # Slightly elevated card background
+    "border": "#1A1A1A",       # Dark subtle border
+    "text_main": "#FFFFFF",    # Pure white for high contrast
+    "text_dim": "#666666",     # Muted gray for secondary text
+    "accent": "#00E5FF",       # Neon Cyan (from the screenshot)
+    "success": "#00FFAA",      # Neon Green for positive states
+    "danger": "#FF0055",       # Neon Red/Pink for negative states
 }
 
 UI_FONT_BOLD = ("SF Pro Display", 16, "bold")
 UI_FONT_REGULAR = ("SF Pro Text", 13)
-UI_FONT_LARGE = ("SF Pro Display", 42, "bold")
+UI_FONT_LARGE = ("SF Pro Display", 46, "bold") # Slightly larger to match the bold typography
 LOG_FONT = ("SF Mono", 11)
 
 ctk.set_appearance_mode("Dark")
@@ -45,6 +46,7 @@ class TradingBotGUI(ctk.CTk):
         self.portfolio = {"USD": 10000.00, "holdings": {}}
         
         self.setup_ui()
+        self.load_config()
 
     def setup_ui(self):
         self.grid_columnconfigure(1, weight=1)
@@ -66,12 +68,12 @@ class TradingBotGUI(ctk.CTk):
         self.create_sidebar_input("WALLET ($)", "entry_usd", "10000")
 
         # Buttons
-        self.btn_start = ctk.CTkButton(self.sidebar, text="INITIALIZE", fg_color=COLORS["accent"], hover_color="#4f46e5", 
+        self.btn_start = ctk.CTkButton(self.sidebar, text="INITIALIZE", fg_color=COLORS["accent"], text_color="#000000", hover_color="#00B3CC", 
                                        font=UI_FONT_BOLD, height=45, corner_radius=8, command=self.start_bot)
         self.btn_start.pack(pady=(40, 10), padx=25, fill="x")
         
         self.btn_stop = ctk.CTkButton(self.sidebar, text="TERMINATE", fg_color="transparent", border_width=1, border_color=COLORS["danger"],
-                                      text_color=COLORS["danger"], hover_color="#450a0a", font=UI_FONT_BOLD, height=45, 
+                                      text_color=COLORS["danger"], hover_color="#2A000A", font=UI_FONT_BOLD, height=45, 
                                       corner_radius=8, command=self.stop_bot, state="disabled")
         self.btn_stop.pack(pady=10, padx=25, fill="x")
 
@@ -108,11 +110,11 @@ class TradingBotGUI(ctk.CTk):
         self.crypto_val = ctk.CTkLabel(self.port_card, text="0.000000 UNITS", font=("SF Pro Display", 18), text_color=COLORS["accent"])
         self.crypto_val.pack(pady=5)
         
-        self.status_val = ctk.CTkLabel(self.port_card, text="● IDLE", font=("SF Pro Text", 11, "bold"), text_color="#3F3F46")
+        self.status_val = ctk.CTkLabel(self.port_card, text="● IDLE", font=("SF Pro Text", 11, "bold"), text_color=COLORS["text_dim"])
         self.status_val.pack(side="bottom", pady=20)
 
         # Log Terminal
-        self.textbox = ctk.CTkTextbox(self.main_container, fg_color="#050505", text_color=COLORS["text_dim"], 
+        self.textbox = ctk.CTkTextbox(self.main_container, fg_color=COLORS["bg"], text_color=COLORS["accent"], 
                                       font=LOG_FONT, corner_radius=12, border_width=1, border_color=COLORS["border"])
         self.textbox.grid(row=1, column=0, columnspan=2, padx=10, pady=20, sticky="nsew")
         self.main_container.grid_rowconfigure(1, weight=1)
@@ -121,7 +123,7 @@ class TradingBotGUI(ctk.CTk):
         lbl = ctk.CTkLabel(self.sidebar, text=label, font=("SF Pro Text", 11, "bold"), text_color=COLORS["text_dim"])
         lbl.pack(pady=(15, 0), padx=25, anchor="w")
         entry = ctk.CTkEntry(self.sidebar, placeholder_text=default, show="*" if is_password else "",
-                             fg_color="#050505", border_color=COLORS["border"], font=UI_FONT_REGULAR, height=35)
+                             fg_color=COLORS["bg"], border_color=COLORS["border"], font=UI_FONT_REGULAR, height=35)
         entry.insert(0, default)
         entry.pack(pady=5, padx=25, fill="x")
         setattr(self, attr, entry)
@@ -131,6 +133,28 @@ class TradingBotGUI(ctk.CTk):
         self.textbox.insert("end", f" {timestamp}  {message}\n")
         self.textbox.see("end")
 
+    def load_config(self):
+        """Loads the API key from a local config file if it exists."""
+        if os.path.exists("config.json"):
+            try:
+                with open("config.json", "r") as f:
+                    config = json.load(f)
+                    if "api_key" in config:
+                        # Clear the default text and insert the saved key
+                        self.entry_api_key.delete(0, "end")
+                        self.entry_api_key.insert(0, config["api_key"])
+            except Exception as e:
+                self.log(f"⚠️ CONFIG LOAD FAILED")
+
+    def save_config(self):
+        """Saves the current API key to a local config file."""
+        key = self.entry_api_key.get().strip()
+        if key:
+            try:
+                with open("config.json", "w") as f:
+                    json.dump({"api_key": key}, f)
+            except Exception as e:
+                self.log(f"⚠️ CONFIG SAVE FAILED")
     def fetch_price(self, symbol):
         url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
         params = urllib.parse.urlencode({"symbol": symbol, "convert": "USD"})
@@ -150,6 +174,7 @@ class TradingBotGUI(ctk.CTk):
         if not key: return
         self.active_api_key = key
         self.is_running = True
+        self.save_config()
         self.symbol = self.entry_symbol.get().upper()
         self.interval = int(self.entry_interval.get())
         self.trade_amt = float(self.entry_trade.get())
