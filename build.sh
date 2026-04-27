@@ -1,2 +1,3 @@
 pip install pyinstaller
-pyinstaller --onefile main.py -w --icon=favicon.ico
+pyinstaller --onefile backend.py 
+npm run build

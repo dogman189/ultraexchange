@@ -1,37 +1,42 @@
 {
-    "name": "monet",
-    "version": "1.0.5",
-    "description": "Algorithmic crypto trading bot — Electron + Python engine",
-    "main": "main.js",
-    "scripts": {
-      "start": "electron .",
-      "build": "electron-builder"
-    },
-    "dependencies": {},
-    "devDependencies": {
-      "electron": "^30.0.0",
-      "electron-builder": "^24.0.0"
-    },
-    "build": {
-      "appId": "com.monet.app",
-      "productName": "monet",
-       "win": {
-        "target": {
-          "target": "portable",
-          "arch": ["x64"]
-      }
+  "name": "monet",
+  "version": "1.0.6",
+  "description": "Algorithmic crypto trading bot — Electron + Python engine",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
   },
-  "extraResources": [
-    {
-      "from": "dist/backend.exe",
-      "to": "backend.exe"
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.monet.app",
+    "productName": "monet",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js"
+    ],
+    "win": {
+      "target": { "target": "portable", "arch": ["x64"] },
+      "extraResources": [
+        { "from": "dist/backend.exe", "to": "backend.exe" }
+      ]
+    },
+    "linux": {
+      "target": { "target": "AppImage", "arch": ["x64"] },
+      "extraResources": [
+        { "from": "dist/backend", "to": "backend" }
+      ]
+    },
+    "mac": {
+      "extraResources": [
+        { "from": "dist/backend", "to": "backend" }
+      ]
     }
-  ],
-  "files": [
-    "main.js",
-    "preload.js",
-    "index.html",
-    "renderer.js"
-  ]
-}
+  }
 }
